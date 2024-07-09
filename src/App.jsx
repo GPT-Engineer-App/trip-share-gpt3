@@ -6,6 +6,7 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import Layout from "./layouts/navbar";
 import Index from "./pages/Index.jsx";
 import MyRides from "./pages/MyRides.jsx";
+import Profile from "./pages/Profile.jsx";
 const queryClient = new QueryClient();
 
 export const navItems = [
@@ -41,7 +42,8 @@ const App = () => {
             <Route path="/" element={<Layout />}>
               <Route index element={<Index />} />
               <Route path="my-rides" element={<MyRides isDriver={false} />} />
-              {/* Add routes for Profile and Help pages */}
+              <Route path="profile" element={<Profile />} />
+              {/* Add route for Help page */}
             </Route>
           </Routes>
         </Router>
