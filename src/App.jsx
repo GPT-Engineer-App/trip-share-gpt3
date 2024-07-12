@@ -8,6 +8,7 @@ import Index from "./pages/Index.jsx";
 import MyRides from "./pages/MyRides.jsx";
 import Profile from "./pages/Profile.jsx";
 import AboutUs from "./pages/AboutUs.jsx";
+import Help from "./pages/Help.jsx";
 
 const queryClient = new QueryClient();
 
@@ -51,7 +52,7 @@ const App = () => {
               <Route path="my-rides" element={<MyRides isDriver={false} />} />
               <Route path="profile" element={<Profile />} />
               <Route path="about-us" element={<AboutUs />} />
-              {/* Add route for Help page */}
+              <Route path="help" element={<Help />} />
             </Route>
           </Routes>
         </Router>
