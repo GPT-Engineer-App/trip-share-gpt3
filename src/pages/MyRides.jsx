@@ -4,37 +4,61 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock, Phone } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Star, MapPin, Clock, Phone, CalendarIcon, Search, Plus } from "lucide-react";
 
 const MyRides = ({ isDriver }) => {
   const [activeTab, setActiveTab] = useState("upcoming");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showPostRideDialog, setShowPostRideDialog] = useState(false);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">My Rides</h1>
+      <div className="flex justify-between items-center mb-4">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search rides..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <Button onClick={() => setShowPostRideDialog(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Post a Ride
+        </Button>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          {isDriver && <TabsTrigger value="ongoing">Ongoing</TabsTrigger>}
+          <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
           <TabsTrigger value="past">Past</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming">
-          <UpcomingRides isDriver={isDriver} />
+          <UpcomingRides isDriver={isDriver} searchQuery={searchQuery} />
         </TabsContent>
-        {isDriver && (
-          <TabsContent value="ongoing">
-            <OngoingRides />
-          </TabsContent>
-        )}
+        <TabsContent value="ongoing">
+          <OngoingRides isDriver={isDriver} searchQuery={searchQuery} />
+        </TabsContent>
         <TabsContent value="past">
-          <PastRides isDriver={isDriver} />
+          <PastRides isDriver={isDriver} searchQuery={searchQuery} />
         </TabsContent>
       </Tabs>
+      <PostRideDialog open={showPostRideDialog} onOpenChange={setShowPostRideDialog} />
     </div>
   );
 };
 
-const UpcomingRides = ({ isDriver }) => {
+const UpcomingRides = ({ isDriver, searchQuery }) => {
   const rides = [
     {
       id: 1,
@@ -43,74 +67,44 @@ const UpcomingRides = ({ isDriver }) => {
       car: "Toyota Camry",
       carType: "Sedan",
       pickup: "123 Main St",
-      estimatedArrival: "10:30 AM",
+      destination: "456 Elm St",
+      date: "2023-04-15",
+      time: "10:30 AM",
+      persons: 2,
     },
     // Add more ride objects as needed
   ];
 
+  const filteredRides = rides.filter(ride =>
+    ride.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ride.pickup.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ride.destination.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-4">
-      {rides.map((ride) => (
-        <Card key={ride.id}>
-          <CardContent className="flex items-center space-x-4 py-4">
-            <Avatar>
-              <AvatarImage src={ride.avatar} />
-              <AvatarFallback>{ride.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-1">
-              <p className="text-sm font-medium">{ride.name}</p>
-              {!isDriver && (
-                <div className="flex items-center">
-                  <Star className="text-yellow-400 h-4 w-4 mr-1" />
-                  <span className="text-sm">4.8</span>
-                </div>
-              )}
-              {!isDriver && (
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary">{ride.carType}</Badge>
-                  <span className="text-sm text-muted-foreground">{ride.car}</span>
-                </div>
-              )}
-            </div>
-            <div className="text-right space-y-1">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 mr-1" />
-                <span>{ride.pickup}</span>
-              </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>{ride.estimatedArrival}</span>
-              </div>
-            </div>
-          </CardContent>
-          <CardContent className="pt-0">
-            <Button variant="outline" className="w-full">
-              <Phone className="h-4 w-4 mr-2" />
-              Contact {isDriver ? "Rider" : "Driver"}
-            </Button>
-          </CardContent>
-        </Card>
+      {filteredRides.map((ride) => (
+        <RideCard key={ride.id} ride={ride} isDriver={isDriver} />
       ))}
     </div>
   );
 };
 
-const OngoingRides = () => {
-  // Implement ongoing rides for drivers
+const OngoingRides = ({ isDriver, searchQuery }) => {
+  // Implement ongoing rides
   return (
     <Card>
       <CardHeader>
         <CardTitle>Ongoing Ride</CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Add real-time information, map view, and estimated arrival time */}
-        <p>Implement map view and real-time information here</p>
+        <p>Implement ongoing rides view here</p>
       </CardContent>
     </Card>
   );
 };
 
-const PastRides = ({ isDriver }) => {
+const PastRides = ({ isDriver, searchQuery }) => {
   const rides = [
     {
       id: 1,
@@ -120,13 +114,19 @@ const PastRides = ({ isDriver }) => {
       date: "2023-03-15",
       time: "14:45",
       fare: "$25.00",
+      cancellationReason: "Schedule change",
     },
     // Add more past ride objects as needed
   ];
 
+  const filteredRides = rides.filter(ride =>
+    ride.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    ride.destination.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-4">
-      {rides.map((ride) => (
+      {filteredRides.map((ride) => (
         <Card key={ride.id}>
           <CardContent className="flex items-center space-x-4 py-4">
             <Avatar>
@@ -139,6 +139,9 @@ const PastRides = ({ isDriver }) => {
               <p className="text-sm text-muted-foreground">
                 {ride.date} at {ride.time}
               </p>
+              {ride.cancellationReason && (
+                <p className="text-sm text-red-500">Cancelled: {ride.cancellationReason}</p>
+              )}
             </div>
             <div className="text-right">
               <p className="text-sm font-medium">{ride.fare}</p>
@@ -150,6 +153,174 @@ const PastRides = ({ isDriver }) => {
         </Card>
       ))}
     </div>
+  );
+};
+
+const RideCard = ({ ride, isDriver }) => {
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  return (
+    <Card>
+      <CardContent className="flex items-center space-x-4 py-4">
+        <Avatar>
+          <AvatarImage src={ride.avatar} />
+          <AvatarFallback>{ride.name[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 space-y-1">
+          <p className="text-sm font-medium">{ride.name}</p>
+          {!isDriver && (
+            <div className="flex items-center">
+              <Star className="text-yellow-400 h-4 w-4 mr-1" />
+              <span className="text-sm">4.8</span>
+            </div>
+          )}
+          <div className="flex items-center space-x-2">
+            <Badge variant="secondary">{ride.carType}</Badge>
+            <span className="text-sm text-muted-foreground">{ride.car}</span>
+          </div>
+          <div className="flex items-center text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4 mr-1" />
+            <span>{ride.pickup} to {ride.destination}</span>
+          </div>
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Clock className="h-4 w-4 mr-1" />
+            <span>{ride.date} at {ride.time}</span>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Persons: {ride.persons}
+          </div>
+        </div>
+      </CardContent>
+      <CardContent className="pt-0 flex justify-between">
+        <Button variant="outline">
+          <Phone className="h-4 w-4 mr-2" />
+          Contact {isDriver ? "Rider" : "Driver"}
+        </Button>
+        <Button variant="outline" onClick={() => setShowCancelDialog(true)}>
+          Cancel Ride
+        </Button>
+      </CardContent>
+      <CancelRideDialog open={showCancelDialog} onOpenChange={setShowCancelDialog} />
+    </Card>
+  );
+};
+
+const PostRideDialog = ({ open, onOpenChange }) => {
+  const [date, setDate] = useState();
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Post a Ride</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="pickup" className="text-right">
+              Pick-up
+            </Label>
+            <Input id="pickup" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="destination" className="text-right">
+              Destination
+            </Label>
+            <Input id="destination" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="date" className="text-right">
+              Date
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={`col-span-3 justify-start text-left font-normal ${!date && "text-muted-foreground"}`}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="time" className="text-right">
+              Time
+            </Label>
+            <Input id="time" type="time" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="car-type" className="text-right">
+              Car Type
+            </Label>
+            <Select>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select car type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sedan">Sedan</SelectItem>
+                <SelectItem value="suv">SUV</SelectItem>
+                <SelectItem value="hatchback">Hatchback</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="car-number" className="text-right">
+              Car Number
+            </Label>
+            <Input id="car-number" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="persons" className="text-right">
+              Persons
+            </Label>
+            <Input id="persons" type="number" min="1" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="notes" className="text-right">
+              Notes
+            </Label>
+            <Textarea id="notes" className="col-span-3" />
+          </div>
+        </div>
+        <Button onClick={() => onOpenChange(false)}>Post Ride</Button>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const CancelRideDialog = ({ open, onOpenChange }) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Cancel Ride</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <Label htmlFor="cancel-reason">Reason for cancellation</Label>
+          <Select>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="schedule-change">Schedule change</SelectItem>
+              <SelectItem value="emergency">Emergency</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          <Textarea id="cancel-reason" placeholder="Please provide more details..." />
+        </div>
+        <Button variant="destructive" onClick={() => onOpenChange(false)}>Confirm Cancellation</Button>
+      </DialogContent>
+    </Dialog>
   );
 };
 
