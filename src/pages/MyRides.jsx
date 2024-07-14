@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { Star, MapPin, Clock, Phone, CalendarIcon, Search, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 const MyRides = ({ isDriver }) => {
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -298,6 +299,23 @@ const PostRideDialog = ({ open, onOpenChange }) => {
 };
 
 const CancelRideDialog = ({ open, onOpenChange }) => {
+  const [reason, setReason] = useState("");
+  const [details, setDetails] = useState("");
+
+  const handleCancel = () => {
+    if (!reason) {
+      toast.error("Please select a reason for cancellation.");
+      return;
+    }
+    if (reason === "other" && !details.trim()) {
+      toast.error("Please provide details for the cancellation reason.");
+      return;
+    }
+    // Here you would typically call an API to cancel the ride
+    toast.success("Ride cancelled successfully.");
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -305,20 +323,36 @@ const CancelRideDialog = ({ open, onOpenChange }) => {
           <DialogTitle>Cancel Ride</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Label htmlFor="cancel-reason">Reason for cancellation</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a reason" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="schedule-change">Schedule change</SelectItem>
-              <SelectItem value="emergency">Emergency</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          <Textarea id="cancel-reason" placeholder="Please provide more details..." />
+          <div className="space-y-2">
+            <Label htmlFor="cancel-reason">Reason for cancellation</Label>
+            <Select onValueChange={setReason} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="schedule-change">Schedule change</SelectItem>
+                <SelectItem value="emergency">Emergency</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {reason === "other" && (
+            <div className="space-y-2">
+              <Label htmlFor="cancel-details">Please provide more details</Label>
+              <Textarea 
+                id="cancel-details" 
+                placeholder="Please provide more details..." 
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+                required
+              />
+            </div>
+          )}
         </div>
-        <Button variant="destructive" onClick={() => onOpenChange(false)}>Confirm Cancellation</Button>
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="destructive" onClick={handleCancel}>Confirm Cancellation</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
